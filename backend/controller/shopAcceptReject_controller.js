@@ -1,10 +1,10 @@
 import Shoprequest from "../models/shoprequest.model.js";
 import Shop from "../models/shops.model.js";
 import User from "../models/users.model.js";
-import { geocodeAddress } from "../utils/geocodeaddress.js";
 import { sendShopApprovalEmail, sendShopRejectionEmail } from "../utils/emailservice.js";
+// import { geocodeAddress } from "../utils/geocodeaddress.js";
 
-
+//get shop request from shop request table
 export const getShopRequest = async (req,res) => {
     try {
         const requests = await Shoprequest.find();
@@ -15,6 +15,8 @@ export const getShopRequest = async (req,res) => {
     
 }
 
+
+//approve shop request
 export const shopApproval = async (req, res) => {
   const { requestId } = req.params;
 
@@ -66,8 +68,8 @@ export const shopApproval = async (req, res) => {
     res.status(500).json({ message: "Error approving request", error: error.message });
   }
 };
-        
-    
+
+//decline shop request
 export const ShopDecline = async (req,res) => {
   const {requestId} = req.params;
 

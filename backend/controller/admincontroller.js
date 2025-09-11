@@ -8,7 +8,7 @@ import { sendWelcomeEmail } from '../utils/emailservice.js';
 
 
 
-
+// delete user and shop api
 export const deleteEntity = async (req, res) => {
   const { type, id } = req.params;
 
@@ -71,6 +71,7 @@ export const deleteEntity = async (req, res) => {
 };
 
 
+// admin panel shops api
 export const getAllshops = async (req,res) => {
   try {
     const shops = await Shop.find({}).populate('owner', 'name email phone');
@@ -81,7 +82,7 @@ export const getAllshops = async (req,res) => {
   
 };
 
-
+// user panel api
 export const getAllusers = async (req,res) => {
   try {
     const users = await User.find();
@@ -92,11 +93,12 @@ export const getAllusers = async (req,res) => {
   
 };
 
+// admin user update
 export const updateUser = async (req, res) => {
   const { id } = req.params;
   const { name, email, phone } = req.body;
 
-  // 1. Validate the incoming data
+  
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'Invalid user ID.' });
   }
@@ -106,25 +108,25 @@ export const updateUser = async (req, res) => {
   }
 
   try {
-    // 2. Find the user by their ID
+  
     const user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // 3. Check if the new email is already taken by another user
+   
     const emailExists = await User.findOne({ email, _id: { $ne: id } });
     if (emailExists) {
       return res.status(400).json({ message: 'Email is already in use by another account.' });
     }
 
-    // 4. Update the user's fields
+   
     user.name = name;
     user.email = email;
     user.phone = phone;
 
-    // 5. Save the updated user and send the response
+   
     const updatedUser = await user.save();
 
     res.status(200).json({
@@ -145,7 +147,7 @@ export const updateUser = async (req, res) => {
 };
 
 
-
+// admin create shop api
 export const createShop = async (req, res) => {
 
     // console.log("createshop triggered");
@@ -154,17 +156,17 @@ export const createShop = async (req, res) => {
     const { name, email, phone, shop } = req.body;
     const defaultPassword = "admin@123";
 
-    // 1. Check if user already exists
+   
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User with this email already exists" });
     }
 
-    // 2. Hash the password
+    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(defaultPassword, salt);
 
-    // 3. Create the user
+    
     const user = new User({
       name,
       email,
@@ -175,7 +177,7 @@ export const createShop = async (req, res) => {
     });
     await user.save();
 
-    // 4. Create the shop
+   
     const newShop = new Shop({
       name: shop.name,
       category: shop.category,
@@ -187,7 +189,7 @@ export const createShop = async (req, res) => {
     });
     await newShop.save();
 
-    // 5. Link shop to user
+   
     user.shopRequest.shopId = newShop._id;
     user.shopRequest.isAccepted = true;
     await user.save();
@@ -204,7 +206,7 @@ export const createShop = async (req, res) => {
   }
 };
 
-
+// admin panel shops update api
 export const updateShop = async (req, res) => {
 //   console.log("data: ", req.params);
   try {

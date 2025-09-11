@@ -3,7 +3,7 @@ import User from '../models/users.model.js';
 import Shop from '../models/shops.model.js';
 import  jwt  from 'jsonwebtoken';
 
-
+//registration
 export const registration = async (req, res) => {
  
     const {name,email, phone, password}= req.body;
@@ -27,6 +27,8 @@ export const registration = async (req, res) => {
   
 }
 
+
+// for login 
 export const loginuser = async (req,res) => {
     const {email, password} = req.body;
 
@@ -61,6 +63,8 @@ export const loginuser = async (req,res) => {
     }
 };
 
+
+//for profile
 export const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userID;
@@ -77,6 +81,8 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+
+//update user profile
 export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.userID;

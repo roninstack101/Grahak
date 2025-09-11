@@ -3,9 +3,11 @@ import crypto from "crypto";
 import User from "../models/users.model.js";
 import bcrypt from "bcryptjs";
 
-export const otpStore = new Map();
-export const resetTokenStore = new Map();
+export const otpStore = new Map(); // In-memory store for OTPs
+export const resetTokenStore = new Map(); // In-memory store for password reset tokens
 
+
+//request otp for verification at the time of signup
 export const requestOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -14,14 +16,14 @@ export const requestOTP = async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // Generate OTP
+   
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    const expiresAt = Date.now() + 10 * 60 * 1000; 
 
-    // Store OTP
+    
     otpStore.set(email, { otp, expiresAt });
 
-    // Send OTP email
+    
     await sendOTPEmail(email, otp);
 
     res.json({ message: "OTP sent successfully" });
@@ -31,6 +33,8 @@ export const requestOTP = async (req, res) => {
   }
 };
 
+
+//verify OTP
 export const verifyOTP = (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -64,6 +68,8 @@ export const verifyOTP = (req, res) => {
   }
 };
 
+
+//request for password reset    
 export const requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
@@ -72,21 +78,20 @@ export const requestPasswordReset = async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // Check if user exists
+    
     const user = await User.findOne({ email });
     if (!user) {
-      // Don't reveal that the email doesn't exist for security reasons
       return res.json({ message: "If the email exists, a password reset link has been sent" });
     }
 
-    // Generate reset token
+    
     const resetToken = crypto.randomBytes(32).toString("hex");
     const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour expiry
 
-    // Store reset token
+    
     resetTokenStore.set(resetToken, { email, expiresAt });
 
-    // Send password reset email
+   
     await sendPasswordResetEmail(email, resetToken);
 
     res.json({ message: "Password reset email sent successfully" });
@@ -96,6 +101,8 @@ export const requestPasswordReset = async (req, res) => {
   }
 };
 
+
+//reset password    
 export const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -104,7 +111,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Token and new password are required" });
     }
 
-    // Validate password strength
+    
     if (newPassword.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters long" });
     }
@@ -122,29 +129,27 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Reset token expired" });
     }
 
-    // Find user by email
+   
     const user = await User.findOne({ email });
     if (!user) {
       resetTokenStore.delete(token);
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if new password is different from current password
-    // Since we can't use the comparePassword method, we'll use bcrypt directly
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
       return res.status(400).json({ error: "New password must be different from current password" });
     }
 
-    // Hash the new password
+    
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    // Update user's password in the database
+    
     user.password = hashedPassword;
     await user.save();
 
-    // Remove used token
+   
     resetTokenStore.delete(token);
 
     res.json({ message: "Password reset successfully" });

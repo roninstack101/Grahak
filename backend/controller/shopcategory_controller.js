@@ -77,7 +77,7 @@ export const getNearbyShops = async (req, res) => {
     }
 };
 
-
+//get shop by id
 export const getshopbyid = async (req, res) => {
   // console.log("getshopbyid triggered");
   try {

@@ -11,7 +11,7 @@ export const viewcart = async (req, res) => {
                 populate: {
                     path: 'shop',
                     model: 'Shop',
-                    select: 'name' // Select any shop fields you need
+                    select: 'name'
                 }
             });
 
@@ -19,9 +19,9 @@ export const viewcart = async (req, res) => {
             return res.status(200).json({ groupedByShop: [], grandTotal: 0 });
         }
 
-        // 1. Group items by shop and calculate subtotals
+        //grouping of products by shop 
         const groupedByShopMap = usercart.items.reduce((acc, item) => {
-            // Ensure product and shop data exists
+           
             if (!item.product || !item.product.shop) {
                 return acc;
             }
@@ -29,7 +29,7 @@ export const viewcart = async (req, res) => {
             const shopId = item.product.shop._id.toString();
             const shopName = item.product.shop.name;
 
-            // If we haven't seen this shop yet, initialize it
+            
             if (!acc[shopId]) {
                 acc[shopId] = {
                     shopId,
@@ -39,22 +39,22 @@ export const viewcart = async (req, res) => {
                 };
             }
 
-            // Add the item to this shop's group
+           
             acc[shopId].items.push(item);
             
-            // Add to this shop's subtotal
+            
             acc[shopId].subtotal += item.product.price * item.quantity;
             
             return acc;
         }, {});
 
-        // 2. Convert the map object to an array
+        // Convert the  object to an array
         const groupedByShopArray = Object.values(groupedByShopMap);
 
-        // 3. Calculate the grand total
+       
         const grandTotal = groupedByShopArray.reduce((total, shop) => total + shop.subtotal, 0);
 
-        // 4. Send the new, structured response
+       
         res.status(200).json({
             groupedByShop: groupedByShopArray,
             grandTotal: grandTotal
@@ -66,6 +66,8 @@ export const viewcart = async (req, res) => {
     }
 };
 
+
+// add to cart api
 export const addtocart = async (req, res) => {
   const { userid, productid, quantity } = req.body;
 
@@ -94,6 +96,7 @@ export const addtocart = async (req, res) => {
   }
 };
 
+//remove item from cart api
 export const removeItem = async (req, res) => {
   const { userid, productid } = req.body;
 
@@ -114,6 +117,8 @@ export const removeItem = async (req, res) => {
   }
 };
 
+
+// clear the cart api
 export const clearcart = async (req, res) => {
   const { userId } = req.params;
 
@@ -132,6 +137,8 @@ export const clearcart = async (req, res) => {
   }
 };
 
+
+// remove from the whole product from cart api
 export const removeFromCart = async (req, res) => {
   const { userid, productid } = req.body;
 

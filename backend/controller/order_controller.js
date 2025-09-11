@@ -3,12 +3,14 @@ import Product from "../models/products.model.js";
 import Cart from "../models/cart.model.js";
 import QRCode from 'qrcode';
 
+
+//order checkout api
 export const checkoutFromCart = async (req, res) => {
     const { userid } = req.body;
-     console.log(`CHECKOUT initiated for user ID from body: ${userid}`);
+    //  console.log(`CHECKOUT initiated for user ID from body: ${userid}`);
 
     try {
-        // 1. Find the user's cart and populate all necessary details
+        
         const cart = await Cart.findOne({ user: userid }).populate({
             path: 'items.product',
             model: 'Product'
@@ -18,11 +20,11 @@ export const checkoutFromCart = async (req, res) => {
             return res.status(400).json({ message: "Cart is empty." });
         }
 
-        // 2. Group all cart items by their shop ID
+        
         const ordersByShop = cart.items.reduce((acc, cartItem) => {
     const product = cartItem.product;
 
-    // Skip if product reference is missing
+    
     if (!product) {
         console.warn(`Product missing for cart item ${cartItem._id}, skipping...`);
         return acc;
@@ -36,17 +38,17 @@ export const checkoutFromCart = async (req, res) => {
     return acc;
 }, {});
 
-        // 3. Create a separate order for each shop
+        
         const createdOrders = [];
         for (const shopId in ordersByShop) {
             const items = ordersByShop[shopId];
             
-            // --- We can reuse your existing validation logic here ---
+           
             let totalPrice = 0;
             const updatedItems = [];
 
             for (const item of items) {
-                const product = item.product; // The product is already populated
+                const product = item.product; 
                 const qty = Number(item.quantity);
 
                 if (product.quantity < qty) {
@@ -56,10 +58,7 @@ export const checkoutFromCart = async (req, res) => {
                 totalPrice += qty * product.price;
                 updatedItems.push({ product: product._id, quantity: qty, price: product.price });
             }
-
-            
-
-            // Create and save the new order for this shop
+           
             const order = new Order({
                 user: userid,
                 shop: shopId,
@@ -70,7 +69,7 @@ export const checkoutFromCart = async (req, res) => {
             createdOrders.push(order);
         }
 
-        // 4. Clear the user's cart now that orders are created
+        
         cart.items = [];
         await cart.save();
 
@@ -82,6 +81,8 @@ export const checkoutFromCart = async (req, res) => {
     }
 };
 
+
+//get orders by status for history and available section
 export const getorderbystatus = async (req,res) => {
     const {shopId} = req.params;
     const {status} = req.query;
@@ -104,6 +105,8 @@ export const getorderbystatus = async (req,res) => {
     
 };
 
+
+// accept order 
 export const acceptorder = async (req, res) => {
   const { orderId } = req.params;
 
@@ -142,6 +145,8 @@ export const acceptorder = async (req, res) => {
   }
 };
 
+
+// reject order
 export const rejectorder = async (req,res) => {
     const {orderId} = req.params;
     
@@ -159,6 +164,8 @@ export const rejectorder = async (req,res) => {
     
 };
 
+
+// order history for user 
 export const getMyOrders = async (req, res) => {
     try {
         // req.user.id comes from your authenticateUser middleware
@@ -166,9 +173,9 @@ export const getMyOrders = async (req, res) => {
         console.log(`GET_ORDERS fetching for user ID from token: ${userId}`);
 
         const orders = await Order.find({ user: userId })
-            .populate('shop', 'name') // Get the shop's name
-            .populate('items.product', 'name') // Get each product's name
-            .sort({ createdAt: -1 }); // Show the newest orders first
+            .populate('shop', 'name') 
+            .populate('items.product', 'name') 
+            .sort({ createdAt: -1 });
 
         res.status(200).json(orders);
     } catch (error) {
@@ -176,27 +183,7 @@ export const getMyOrders = async (req, res) => {
     }
 };
 
-
-
-export const getOrderById = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-
-    const order = await Order.findById(orderId)
-      .populate("user", "name email")
-      .populate("items.product", "name price");
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    res.status(200).json({ order });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch order", error: error.message });
-  }
-};
-
-
+// for scanned QR code 
 export const scannedorder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id); 
@@ -206,3 +193,24 @@ export const scannedorder = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+// export const getOrderById = async (req, res) => {
+//   try {
+//     const { orderId } = req.params;
+
+//     const order = await Order.findById(orderId)
+//       .populate("user", "name email")
+//       .populate("items.product", "name price");
+
+//     if (!order) {
+//       return res.status(404).json({ message: "Order not found" });
+//     }
+
+//     res.status(200).json({ order });
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to fetch order", error: error.message });
+//   }
+// };
+
